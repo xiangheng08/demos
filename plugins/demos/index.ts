@@ -1,16 +1,13 @@
-import { debounce, isSubPath } from './utils'
 import { readDemoConfigs } from './read'
+import { debounce, isSubPath } from './utils'
+import { readdirSync, readFileSync } from 'node:fs'
 import { basename, isAbsolute, join, relative } from 'node:path'
 import { PluginOption, ResolvedConfig, ViteDevServer, normalizePath } from 'vite'
 import { generateDefaultDemosModuleContent, generateDemosModuleContent } from './virtual_module'
+import { DEMO_DIR_CONFIG_FILE_NAME, RESOLVED_VIRTUAL_MODULE_ID, VIRTUAL_MODULE_ID } from './config'
 import type { DemoConfigWithPlugin } from 'virtual:demos'
-import { readdirSync, readFileSync } from 'node:fs'
-import { DEMO_DIR_CONFIG_FILE_NAME } from './config'
 
 export const demos = (): PluginOption => {
-  const virtualModuleId = 'virtual:demos'
-  const resolvedVirtualModuleId = '\0' + virtualModuleId
-
   let _resolvedConfig: ResolvedConfig
   let _server: ViteDevServer
 
@@ -26,6 +23,10 @@ export const demos = (): PluginOption => {
    * demos 虚拟模块内容
    */
   let demosModuleContent = generateDefaultDemosModuleContent()
+  /**
+   * ViteDevServer WebSocket 是否连接
+   */
+  let wsConnected = false
 
   const updateDemosModule = (first = false) => {
     demoConfigs = readDemoConfigs(
@@ -50,8 +51,8 @@ export const demos = (): PluginOption => {
 
       if (!first && _server) {
         // 重新加载虚拟模块
-        _server.watcher.emit('change', resolvedVirtualModuleId)
-        _server.watcher.emit('all', 'change', resolvedVirtualModuleId)
+        _server.watcher.emit('change', RESOLVED_VIRTUAL_MODULE_ID)
+        _server.watcher.emit('all', 'change', RESOLVED_VIRTUAL_MODULE_ID)
       }
     }
   }
@@ -61,12 +62,12 @@ export const demos = (): PluginOption => {
   return {
     name: 'demos-plugin',
     resolveId(id) {
-      if (id === virtualModuleId) {
-        return resolvedVirtualModuleId
+      if (id === VIRTUAL_MODULE_ID) {
+        return RESOLVED_VIRTUAL_MODULE_ID
       }
     },
     load(id) {
-      if (id === resolvedVirtualModuleId) {
+      if (id === RESOLVED_VIRTUAL_MODULE_ID) {
         return demosModuleContent
       }
     },
@@ -76,25 +77,44 @@ export const demos = (): PluginOption => {
     },
     configureServer(server) {
       _server = server
+
       server.middlewares.use((req, res, next) => {
         // console.log('URL:', req.url)
+        if (req.method !== 'GET' || !req.url?.startsWith('/demos')) return next()
+        const filePath = join(_resolvedConfig.root, req.url)
         if (
-          req.url?.startsWith('/demos') &&
-          req.method === 'GET' &&
-          demoConfigs.some(
-            (config) =>
-              config.type === 'html' && isSubPath(config.dir, join(_resolvedConfig.root, req.url!)),
-          )
+          demoConfigs.some((config) => config.type === 'html' && isSubPath(config.dir, filePath))
         ) {
+          // 手动读取文件返回
+          // vite 返回的 html 会可能会包含 vueDevTools，从而导致页面上出现两个 vueDevTools
+          const file = readFileSync(filePath)
+          res.end(file)
+        } else {
+          next()
         }
-        next()
       })
 
+      // 监听 demos 目录下的文件变化
       server.watcher.add(demosDir).on('all', (event, path) => {
         if (isAbsolute(path) && isSubPath(demosDir, path)) {
-          // 如果是 demos 目录下的文件变更，更新 demos 模块内容
-          debounceUpdateDemosModule()
+          if (event !== 'change' || path.endsWith(DEMO_DIR_CONFIG_FILE_NAME)) {
+            // 如果是 demos 目录下的文件变更，更新 demos 模块内容
+            debounceUpdateDemosModule()
+          }
+          if (wsConnected) {
+            const demoConfig = demoConfigs.find(
+              (config) => config.type === 'html' && isSubPath(config.dir, path),
+            )
+            // html demo 文件变更，发送更新消息给客户端
+            if (demoConfig) {
+              server.ws.send('demos:html-demo-changed', { id: demoConfig.id })
+            }
+          }
         }
+      })
+
+      server.ws.on('connection', () => {
+        wsConnected = true
       })
     },
     buildStart() {
@@ -129,7 +149,7 @@ export const demosBuild = (): PluginOption => {
           if (entry.isDirectory()) {
             dfs(fullPath, dirName, baseDir)
           } else {
-            // 读取文件内容并让 Vite 处理
+            // 读取并发出文件内容并让 Vite 处理
             const fileContent = readFileSync(fullPath)
             this.emitFile({
               type: 'asset',
@@ -141,6 +161,7 @@ export const demosBuild = (): PluginOption => {
       }
 
       for (const demoConfig of demoConfigs) {
+        // 仅处理 html 类型的 demo 目录
         if (demoConfig.type !== 'html') continue
         // 递归处理目录下的所有文件
         const dirName = basename(demoConfig.dir)

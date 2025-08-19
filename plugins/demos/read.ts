@@ -1,9 +1,9 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { normalizePath } from 'vite'
 import { join, relative } from 'node:path'
 import { DemoConfigWithPlugin } from 'virtual:demos'
-import { isDirectory, isFile } from './utils'
-import { normalizePath } from 'vite'
 import { DEMO_DIR_CONFIG_FILE_NAME } from './config'
+import { isDirectory, isFile, isObject } from './utils'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 
 export const readDemoConfigs = (
   demosDir: string,
@@ -24,21 +24,37 @@ export const readDemoConfigs = (
     let demoConfigFile: DemoConfigWithPlugin
 
     if (existsSync(demoConfigFilePath) && isFile(demoConfigFilePath)) {
-      demoConfigFile = JSON.parse(readFileSync(demoConfigFilePath, 'utf-8'))
+      try {
+        // 读取配置文件
+        demoConfigFile = JSON.parse(readFileSync(demoConfigFilePath, 'utf-8'))
+
+        if (!isObject(demoConfigFile)) {
+          // 配置文件不是对象
+          throw new Error(`[${demoConfigFilePath}] is not a object.`)
+        }
+
+        // 过滤掉仅开发环境的 demo
+        if (demoConfigFile.onlyDev && isBuild) continue
+      } catch (error) {
+        console.error(`[${demoConfigFilePath}] ${error}`)
+      }
     }
 
     if (isFile(htmlPath)) {
       demoConfigs.push({
         ...demoConfigFile!,
+        id: file,
         type: 'html',
         dir: demoDirPath,
+        // 构建时相对与 demos，开发时相对与根目录
         html: isBuild
-          ? normalizePath(relative(demosDir, htmlPath))
-          : normalizePath(relative(root, htmlPath)),
+          ? normalizePath('./' + relative(demosDir, htmlPath))
+          : normalizePath('./' + relative(root, htmlPath)),
       })
     } else if (isFile(componentPath)) {
       demoConfigs.push({
         ...demoConfigFile!,
+        id: file,
         type: 'component',
         dir: demoDirPath,
         component: normalizePath(relative(demosDir, componentPath)),

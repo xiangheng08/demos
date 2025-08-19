@@ -1,5 +1,5 @@
-import { copyFileSync, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs'
-import { isAbsolute, join, relative } from 'node:path'
+import { existsSync, statSync } from 'node:fs'
+import { isAbsolute, relative } from 'node:path'
 
 /**
  * 检测 path 是否为目录
@@ -37,29 +37,6 @@ export const isSubPath = (parentPath: string, childPath: string, notSelf = true)
   return !relativePath.startsWith('..') && !isAbsolute(relativePath)
 }
 
-export const copyDirRecursive = (src: string, dest: string) => {
-  // 确保目标目录存在
-  if (!existsSync(dest)) {
-    mkdirSync(dest, { recursive: true })
-  }
-
-  // 读取源目录内容
-  const entries = readdirSync(src, { withFileTypes: true })
-
-  for (const entry of entries) {
-    const srcPath = join(src, entry.name)
-    const destPath = join(dest, entry.name)
-
-    if (entry.isDirectory()) {
-      // 递归复制子目录
-      copyDirRecursive(srcPath, destPath)
-    } else {
-      // 复制文件
-      copyFileSync(srcPath, destPath)
-    }
-  }
-}
-
 export const debounce = <T extends any[], R>(
   fn: (...args: T) => R,
   wait?: number,
@@ -71,4 +48,8 @@ export const debounce = <T extends any[], R>(
       fn(...args)
     }, wait)
   }
+}
+
+export const isObject = (value: unknown): value is Record<string, unknown> => {
+  return value !== null && typeof value === 'object'
 }

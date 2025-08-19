@@ -5,7 +5,7 @@ export const template = `export const configs = __configs__`
 export const formatDomeConfigModuleContent = (demoConfig: DemoConfigWithPlugin) => {
   if (demoConfig.type === 'html') {
     return `  {
-    id: ${formatStringProperty(demoConfig.html)},
+    id: ${formatStringProperty(demoConfig.id)},
     type: 'html',
     title: ${formatStringProperty(demoConfig.title)},
     description: ${formatStringProperty(demoConfig.description)},
@@ -13,7 +13,7 @@ export const formatDomeConfigModuleContent = (demoConfig: DemoConfigWithPlugin) 
   }`
   } else {
     return `  {
-    id: ${formatStringProperty(demoConfig.component)},
+    id: ${formatStringProperty(demoConfig.id)},
     type: 'component',
     title: ${formatStringProperty(demoConfig.title)},
     description: ${formatStringProperty(demoConfig.description)},
