@@ -5,7 +5,11 @@ import { isDirectory, isFile } from './utils'
 import { normalizePath } from 'vite'
 import { DEMO_DIR_CONFIG_FILE_NAME } from './config'
 
-export const readDemoConfigs = (demosDir: string, root: string): DemoConfigWithPlugin[] => {
+export const readDemoConfigs = (
+  demosDir: string,
+  root: string,
+  isBuild: boolean,
+): DemoConfigWithPlugin[] => {
   const demoConfigs: DemoConfigWithPlugin[] = []
   if (!existsSync(demosDir)) return demoConfigs
 
@@ -28,7 +32,9 @@ export const readDemoConfigs = (demosDir: string, root: string): DemoConfigWithP
         ...demoConfigFile!,
         type: 'html',
         dir: demoDirPath,
-        html: normalizePath(relative(demosDir, htmlPath)),
+        html: isBuild
+          ? normalizePath(relative(demosDir, htmlPath))
+          : normalizePath(relative(root, htmlPath)),
       })
     } else if (isFile(componentPath)) {
       demoConfigs.push({

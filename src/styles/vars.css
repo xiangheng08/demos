@@ -1,0 +1,37 @@
+/* Background Colors */
+:root {
+  --c-bg: #ffffff;
+  --c-bg-alt: #f6f6f7;
+  --c-bg-elv: #ffffff;
+  --c-bg-soft: #f6f6f7;
+}
+
+.dark {
+  --c-bg: #1b1b1f;
+  --c-bg-alt: #161618;
+  --c-bg-elv: #202127;
+  --c-bg-soft: #202127;
+}
+
+/* Text Colors */
+:root {
+  --c-text-1: #3c3c43;
+  --c-text-2: #67676c;
+  --c-text-3: #929295;
+}
+
+.dark {
+  --c-text-1: #dfdfd6;
+  --c-text-2: #98989f;
+  --c-text-3: #6a6a71;
+}
+
+/* Font Family */
+:root {
+  --font-family-base: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-family-mono:
+    ui-monospace, 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono',
+    'Courier New', monospace;
+  font-optical-sizing: auto;
+}

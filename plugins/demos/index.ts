@@ -28,7 +28,11 @@ export const demos = (): PluginOption => {
   let demosModuleContent = generateDefaultDemosModuleContent()
 
   const updateDemosModule = (first = false) => {
-    demoConfigs = readDemoConfigs(demosDir, _resolvedConfig.root)
+    demoConfigs = readDemoConfigs(
+      demosDir,
+      _resolvedConfig.root,
+      _resolvedConfig.command === 'build',
+    )
 
     if (_resolvedConfig.command === 'build') {
       Reflect.defineProperty(_resolvedConfig, 'demoConfigs', {
