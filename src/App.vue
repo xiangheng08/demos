@@ -6,7 +6,7 @@ configs.forEach((config) => {
     console.log(config)
 
     config
-      .importFn()
+      .component()
       .then((module) => {
         console.log(`Component loaded: ${config.component}`, module)
       })
