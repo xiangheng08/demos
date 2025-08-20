@@ -48,11 +48,25 @@ export const demos = (): PluginOption => {
 
     if (mewDemosModuleContent !== demosModuleContent) {
       demosModuleContent = mewDemosModuleContent
+      // console.log('[demos] 虚拟模块更新了')
 
       if (!first && _server) {
-        // 重新加载虚拟模块
-        _server.watcher.emit('change', RESOLVED_VIRTUAL_MODULE_ID)
-        _server.watcher.emit('all', 'change', RESOLVED_VIRTUAL_MODULE_ID)
+        // 通知客户端这个虚拟模块更新了
+        const module = _server.moduleGraph.getModuleById(RESOLVED_VIRTUAL_MODULE_ID)
+        if (module) {
+          _server.moduleGraph.invalidateModule(module)
+          _server.ws.send({
+            type: 'update',
+            updates: [
+              {
+                type: 'js-update',
+                path: VIRTUAL_MODULE_ID,
+                acceptedPath: VIRTUAL_MODULE_ID,
+                timestamp: Date.now(),
+              },
+            ],
+          })
+        }
       }
     }
   }

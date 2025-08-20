@@ -1,3 +1,70 @@
+/* Palette */
+:root {
+  --c-gray-1: #dddde3;
+  --c-gray-2: #e4e4e9;
+  --c-gray-3: #ebebef;
+  --c-gray-soft: rgba(142, 150, 170, 0.14);
+
+  --c-indigo-1: #3451b2;
+  --c-indigo-2: #3a5ccc;
+  --c-indigo-3: #5672cd;
+  --c-indigo-soft: rgba(100, 108, 255, 0.14);
+
+  --c-purple-1: #6f42c1;
+  --c-purple-2: #7e4cc9;
+  --c-purple-3: #8e5cd9;
+  --c-purple-soft: rgba(159, 122, 234, 0.14);
+
+  --c-green-1: #18794e;
+  --c-green-2: #299764;
+  --c-green-3: #30a46c;
+  --c-green-soft: rgba(16, 185, 129, 0.14);
+
+  --c-yellow-1: #915930;
+  --c-yellow-2: #946300;
+  --c-yellow-3: #9f6a00;
+  --c-yellow-soft: rgba(234, 179, 8, 0.14);
+
+  --c-red-1: #b8272c;
+  --c-red-2: #d5393e;
+  --c-red-3: #e0575b;
+  --c-red-soft: rgba(244, 63, 94, 0.14);
+
+  --c-sponsor: #db2777;
+}
+
+.dark {
+  --c-gray-1: #515c67;
+  --c-gray-2: #414853;
+  --c-gray-3: #32363f;
+  --c-gray-soft: rgba(101, 117, 133, 0.16);
+
+  --c-indigo-1: #a8b1ff;
+  --c-indigo-2: #5c73e7;
+  --c-indigo-3: #3e63dd;
+  --c-indigo-soft: rgba(100, 108, 255, 0.16);
+
+  --c-purple-1: #c8abfa;
+  --c-purple-2: #a879e6;
+  --c-purple-3: #8e5cd9;
+  --c-purple-soft: rgba(159, 122, 234, 0.16);
+
+  --c-green-1: #3dd68c;
+  --c-green-2: #30a46c;
+  --c-green-3: #298459;
+  --c-green-soft: rgba(16, 185, 129, 0.16);
+
+  --c-yellow-1: #f9b44e;
+  --c-yellow-2: #da8b17;
+  --c-yellow-3: #a46a0a;
+  --c-yellow-soft: rgba(234, 179, 8, 0.16);
+
+  --c-red-1: #f66f81;
+  --c-red-2: #f14158;
+  --c-red-3: #b62a3c;
+  --c-red-soft: rgba(244, 63, 94, 0.16);
+}
+
 /* Background Colors */
 :root {
   --c-bg: #ffffff;
@@ -24,6 +91,43 @@
   --c-text-1: #dfdfd6;
   --c-text-2: #98989f;
   --c-text-3: #6a6a71;
+}
+
+/* Border Colors */
+:root {
+  --c-border: #c2c2c4;
+  --c-divider: #e2e2e3;
+  --c-gutter: #e2e2e3;
+}
+
+.dark {
+  --c-border: #3c3f44;
+  --c-divider: #2e2e32;
+  --c-gutter: #000000;
+}
+
+/* Function Colors */
+:root {
+  --c-default-1: var(--c-gray-1);
+  --c-default-2: var(--c-gray-2);
+  --c-default-3: var(--c-gray-3);
+  --c-default-soft: var(--c-gray-soft);
+
+  --c-brand-1: var(--c-indigo-1);
+  --c-brand-2: var(--c-indigo-2);
+  --c-brand-3: var(--c-indigo-3);
+  --c-brand-soft: var(--c-indigo-soft);
+}
+
+/* Solid Colors */
+:root {
+  --c-solid: #000000;
+  --c-solid-reverse: #ffffff;
+}
+
+.dark {
+  --c-solid: #ffffff;
+  --c-solid-reverse: #000000;
 }
 
 /* Font Family */
