@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>穿越星空</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+			}
+			html,
+			body {
+				height: 100%;
+			}
+			body {
+				background-color: black;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+		<canvas></canvas>
+
+		<script>
+			// 星星颜色
+			const STAR_COLOR = '#fff';
+			// 星星数量
+			const STAR_COUNT = (window.innerWidth + window.innerHeight) / 8;
+			// 原点
+			let origin = {
+				x: window.innerWidth / 2,
+				y: window.innerHeight / 2,
+			};
+
+			const canvas = document.querySelector('canvas');
+			const ctx = canvas.getContext('2d');
+
+			canvas.width = document.body.clientWidth;
+			canvas.height = document.body.clientHeight;
+
+			ctx.fillStyle = STAR_COLOR;
+			ctx.beginPath();
+			ctx.arc(origin.x, origin.y, 2, 0, 2 * Math.PI);
+			ctx.closePath();
+			ctx.fill();
+
+			const fn = (s) => (typeof s === 'number' ? parseFloat(s.toFixed(2)) : NaN);
+			canvas.onclick = (event) => {
+				ctx.fillStyle = STAR_COLOR;
+				ctx.beginPath();
+				ctx.arc(event.clientX, event.clientY, 2, 0, 2 * Math.PI);
+				ctx.closePath();
+				ctx.fill();
+
+				// 计算点a相对于原点的角度（以弧度为单位）
+				const angleRadians = Math.atan2(event.clientY - origin.y, event.clientX - origin.x);
+
+				// 将弧度转换为角度
+				const angleDegrees = angleRadians * (180 / Math.PI);
+
+				let tx, ty;
+
+				const abs = Math.abs(angleDegrees);
+
+				tx = 1 - abs / 180;
+
+				let s = angleDegrees + 90;
+				if (s > 180) s = -(180 - (s - 180));
+
+        ty = Math.abs(s) / 180;
+
+				console.log(fn(angleDegrees), fn(tx), fn(ty));
+			};
+		</script>
+	</body>
+</html>

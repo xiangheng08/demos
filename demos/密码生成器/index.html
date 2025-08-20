@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>密码生成器</title>
+		<style>
+			:root {
+				color-scheme: light dark;
+				color: #cfd3dc;
+			}
+			* {
+				margin: 0;
+				padding: 0;
+			}
+			main {
+				margin: 10% auto 0 auto;
+				min-width: 300px;
+				max-width: 520px;
+				min-height: 200px;
+				background-color: #222;
+				padding: 30px;
+				box-sizing: border-box;
+				border-radius: 4px;
+			}
+			main > div {
+				margin-bottom: 15px;
+			}
+			main > div:last-child {
+				margin-bottom: 0;
+			}
+			.text {
+				width: calc(100% - 12px);
+				padding: 6px;
+				line-height: 28px;
+				border-radius: 4px;
+				box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+				overflow-wrap: break-word;
+				word-wrap: break-word;
+				text-align: center;
+				font-size: 15px;
+			}
+			button {
+				padding: 0 10px;
+			}
+			.divider {
+				border-top: 1px solid #4c4d4f;
+				padding-top: 6px;
+			}
+			.options {
+				font-size: 14px;
+				margin-right: 10px;
+			}
+			.options:last-child {
+				margin-right: 0;
+			}
+			.but-box {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				margin-top: 30px;
+			}
+			.but-box button {
+				padding: 2px 12px;
+				min-width: 70px;
+				text-align: center;
+				margin: 0 5px;
+			}
+			.prompt {
+				margin-left: 10px;
+				color: #aaa;
+				font-size: 14px;
+			}
+		</style>
+	</head>
+	<body>
+		<main>
+			<div class="text"></div>
+			<div class="length">
+				<span>长度：</span>
+				<button class="subtract" onclick="subtract()">-</button>
+				<span class="number">8</span>
+				<button class="add" onclick="add()">+</button>
+
+				<span class="prompt">长按可快速加减</span>
+			</div>
+			<div class="contain divider">
+				<span>包含：</span>
+				<span class="options">
+					<input type="checkbox" id="lowercase" name="lowercase" checked />
+					<label for="lowercase">小写字母</label>
+				</span>
+				<span class="options">
+					<input type="checkbox" id="uppercase" name="uppercase" checked />
+					<label for="uppercase">大写写字母</label>
+				</span>
+				<span class="options">
+					<input type="checkbox" id="numbers" name="numbers" checked />
+					<label for="numbers">数字</label>
+				</span>
+				<span class="options">
+					<input type="checkbox" id="specialChars" name="specialChars" checked />
+					<label for="specialChars">特殊字符</label>
+				</span>
+			</div>
+			<div class="but-box">
+				<button onclick="generatePassword()">换一个</button>
+				<button onclick="copy()">复制</button>
+			</div>
+		</main>
+	</body>
+	<script>
+		let length = 8; // 密码长度
+		let includeLowercase = true; // 是否包含小写字母
+		let includeUppercase = false; // 是否包含大写字母
+		let includeNumbers = true; // 是否包含数字
+		let includeSpecialChars = false; // 是否包含特殊字符
+		let maxLength = 512; // 最大长度
+		let minLength = 1; // 最小长度
+		let timer;
+
+		// dom
+		const textDom = document.querySelector('main > .text');
+		const numberDom = document.querySelector('.length > .number');
+		const subtractDom = document.querySelector('.length > button.subtract');
+		const addDom = document.querySelector('.length > button.add');
+		const lowercaseDom = document.getElementById('lowercase');
+		const uppercaseDom = document.getElementById('uppercase');
+		const numbersDom = document.getElementById('numbers');
+		const specialCharsDom = document.getElementById('specialChars');
+
+		// 设置多选框的初始选中状态
+		lowercaseDom.checked = includeLowercase;
+		uppercaseDom.checked = includeUppercase;
+		numbersDom.checked = includeNumbers;
+		specialCharsDom.checked = includeSpecialChars;
+
+		// 设置长度
+		function setLength() {
+			numberDom.innerText = length;
+			generatePassword();
+		}
+
+		// 加
+		function add() {
+			length++;
+			if (length > maxLength) length = maxLength;
+			setLength();
+		}
+
+		// 减
+		function subtract() {
+			length--;
+			if (length < minLength) length = minLength;
+			setLength();
+		}
+
+		// 绑定长按事件
+		function longPress(dom = document, fn) {
+			let timer1, timer2;
+			dom.addEventListener('mousedown', (event) => {
+				event.preventDefault();
+				if (event.button === 0) {
+					timer1 = setTimeout(() => {
+						timer2 = setInterval(() => {
+							fn();
+						}, 100);
+					}, 300);
+				}
+			});
+
+			document.addEventListener('mouseup', (event) => {
+				clearInterval(timer2);
+				clearTimeout(timer1);
+			});
+		}
+
+		// 给多选框绑定点击事件
+		lowercaseDom.addEventListener('click', function () {
+			includeLowercase = this.checked;
+			generatePassword();
+		});
+		uppercaseDom.addEventListener('click', function () {
+			includeUppercase = this.checked;
+			generatePassword();
+		});
+		numbersDom.addEventListener('click', function () {
+			includeNumbers = this.checked;
+			generatePassword();
+		});
+		specialCharsDom.addEventListener('click', function () {
+			includeSpecialChars = this.checked;
+			generatePassword();
+		});
+
+		// 生成密码
+		function generatePassword() {
+			clearTimeout(timer);
+			timer = setTimeout(() => {
+				let lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
+				let uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+				let numberChars = '0123456789';
+				let specialChars = '!@#$%^&*()_+-=[]{}|;\':",./<>?';
+				let allChars = '';
+				let password = '';
+
+				// 判断需要那些字符
+				if (includeLowercase) {
+					allChars += lowercaseChars;
+				}
+				if (includeUppercase) {
+					allChars += uppercaseChars;
+				}
+				if (includeNumbers) {
+					allChars += numberChars;
+				}
+				if (includeSpecialChars) {
+					allChars += specialChars;
+				}
+
+				// 打乱字符串顺序
+				allChars = allChars
+					.split('')
+					.sort(() => 0.5 - Math.random())
+					.join('');
+
+				// 从字符串随机取指定的位数的字符
+				for (let i = 0; i < length; i++) {
+					let randomIndex = Math.floor(Math.random() * allChars.length);
+					password += allChars.charAt(randomIndex);
+				}
+
+				textDom.innerText = password;
+			}, 300);
+		}
+
+		// 复制
+		function copy() {
+			const text = textDom.innerText;
+			const copyTextarea = document.createElement('textarea'); // 创建一个textarea元素
+			copyTextarea.value = text; // 设置其value值为要复制的内容
+			document.body.appendChild(copyTextarea); // 将textarea元素添加到文档中
+			copyTextarea.select(); // 选中文本
+			document.execCommand('copy'); // 复制文本
+			document.body.removeChild(copyTextarea); // 删除临时元素
+		}
+
+		setLength();
+
+		longPress(subtractDom, subtract);
+		longPress(addDom, add);
+
+		generatePassword();
+	</script>
+</html>

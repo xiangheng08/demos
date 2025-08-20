@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>图片格式转换</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				color-scheme: light dark;
+			}
+			body {
+				width: 100vw;
+				height: 100vh;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+			button {
+				margin-right: 40px;
+			}
+			p {
+				margin-top: 20px;
+			}
+			.mask {
+				position: absolute;
+				top: 0;
+				left: 0;
+				z-index: 100;
+				width: 100%;
+				height: 100%;
+				background-color: rgba(255, 255, 255, 0.1);
+				display: none;
+				justify-content: center;
+				align-items: center;
+				pointer-events: none;
+			}
+			body.active .mask {
+				display: flex;
+			}
+			body.active main {
+				visibility: hidden;
+			}
+		</style>
+	</head>
+	<body>
+		<main>
+			<button onclick="selectFile()">选择文件</button>
+			<label for="select">目标格式</label>
+			<select id="select">
+				<option value="png">png</option>
+				<option value="jpeg">jpeg</option>
+				<option value="webp">webp</option>
+			</select>
+			<div id="message"></div>
+		</main>
+		<div class="mask">
+			<h1>请将图片拖到这里</h1>
+		</div>
+	</body>
+	<script>
+		let destinationFormat = 'png';
+
+		document.getElementById('select').addEventListener('change', (event) => {
+			destinationFormat = event.target.value;
+		});
+
+		const messageDom = document.getElementById('message');
+
+		// 设置message
+		function setMessage(msg) {
+			const dom = document.createElement('p');
+
+			dom.innerText = msg;
+
+			messageDom.appendChild(dom);
+		}
+
+		// 图片格式转换
+		function convertImageFormat(file, filename) {
+			const reader = new FileReader();
+			reader.readAsDataURL(file);
+			reader.onload = () => {
+				// 创建新图像对象
+				const image = new Image();
+
+				image.onload = function () {
+					// 创建画布对象
+					const canvas = document.createElement('canvas');
+					canvas.width = image.width;
+					canvas.height = image.height;
+
+					// 绘制图像到画布上并获取数据URL
+					const ctx = canvas.getContext('2d');
+					ctx.drawImage(image, 0, 0);
+					const dataURL = canvas.toDataURL('image/' + destinationFormat);
+
+					setMessage('处理完成：' + file.name);
+
+					// 创建下载链接并模拟点击以下载新图像
+					const link = document.createElement('a');
+					link.download = filename + '.' + destinationFormat;
+					link.href = dataURL;
+					document.body.appendChild(link);
+					link.click();
+					document.body.removeChild(link);
+				};
+
+				// 加载源图片
+				image.src = reader.result;
+			};
+		}
+
+		// 选择图片
+		function selectFile() {
+			// 创建input元素
+			const fileInput = document.createElement('input');
+
+			// 设置属性
+			fileInput.type = 'file';
+			fileInput.multiple = true;
+			fileInput.accept = 'image/*';
+
+			// 绑定change事件
+			fileInput.onchange = (event) => {
+				const fileList = event.target.files;
+
+				if (!fileList) return;
+
+				for (let i = 0; i < fileList.length; i++) {
+					const file = fileList[i];
+					if (/^image\/.*/.test(file.type)) {
+						setMessage('正在处理：' + file.name);
+
+						convertImageFormat(file, file.name.replace(/\.[a-zA-Z]+$/, ''));
+					} else {
+						setMessage('不是图片：' + file.name);
+					}
+				}
+			};
+
+			// 触发点击事件
+			fileInput.click();
+		}
+
+		// 文件拖入
+		document.body.addEventListener('dragover', (event) => {
+			// 阻止默认的浏览器行为
+			event.preventDefault();
+			document.body.classList.add('active');
+		});
+
+		// 文件拖出
+		document.body.addEventListener('dragleave', () => {
+			document.body.classList.remove('active');
+		});
+
+		// 获取拖入的文件并处理
+		document.body.addEventListener('drop', (event) => {
+			event.preventDefault();
+
+			// 获取拖入的文件列表
+			const fileList = event.dataTransfer.files;
+
+			// 进行相应的操作
+			for (let i = 0; i < fileList.length; i++) {
+				const file = fileList[i];
+
+				if (/^image\/.*/.test(file.type)) {
+					setMessage('正在处理：' + file.name);
+
+					convertImageFormat(file, file.name.replace(/\.[a-zA-Z]+$/, ''));
+				} else {
+					setMessage('不是图片：' + file.name);
+				}
+			}
+
+			document.body.classList.remove('active');
+		});
+	</script>
+</html>

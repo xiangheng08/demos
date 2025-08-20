@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>文字适配背景</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+			}
+			html,
+			body {
+				height: 100%;
+			}
+			body {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			.box {
+				width: 600px;
+				height: 300px;
+				border-radius: 6px;
+				border: 2px solid #000;
+				background: linear-gradient(70deg, white 50%, black 50%);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			.text {
+				color: #fff;
+				font-size: 24px;
+				mix-blend-mode: difference;
+				transition: 0.7s;
+			}
+			.text:hover {
+				transform: translateX(20%);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="box">
+			<p class="text">文字适配背景</p>
+		</div>
+	</body>
+</html>

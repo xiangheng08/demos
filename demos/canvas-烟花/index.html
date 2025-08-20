@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html lang="cn">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<style>
+			* {
+				padding: 0;
+				margin: 0;
+			}
+
+			body {
+				background-image: linear-gradient(-10deg, #032338 0%, #021521 90%);
+				width: 100vw;
+				height: 100vh;
+				overflow: hidden;
+			}
+		</style>
+		<title>烟花</title>
+	</head>
+
+	<body>
+		<canvas id="fireworks"></canvas>
+
+		<script>
+			const canvas = document.getElementById('fireworks');
+			const ctx = canvas.getContext('2d', {
+				willReadFrequently: true,
+			});
+
+			canvas.width = document.body.clientWidth;
+			canvas.height = document.body.clientHeight;
+
+			const fireworksList = []; // 烟花实例
+			const fireworksTail = 20; // 烟花拖尾长度
+			const rocketList = []; // 火箭实例
+			const rocketTail = 6; // 火箭拖尾长度
+
+			// 烟花类
+			class Fireworks {
+				constructor(x, y, ctx) {
+					// 位置
+					this.clientX = x;
+					this.clientY = y;
+
+					// 画笔
+					this.ctx = ctx;
+
+					// 记录每个粒子的位置信息
+					this.position = [];
+
+					// 粒子数量
+					this.count = Math.floor(Math.random() * 10) + 80;
+
+					// 持续帧数
+					this.persistentFrame = 35;
+
+					// 记录 updated 执行次数
+					this.index = 0;
+
+					// 粒子初始大小
+					this.size = 6;
+
+					// 粒子最小尺寸
+					this.minSize = 1;
+
+					// 绽放大小
+					this.diffusionVelocity = 0.86;
+
+					// 粒子颜色
+					this.color = Math.floor((Math.random() * 360) / 10) * 10;
+				}
+				// 初始化每个粒子的初始位置
+				create() {
+					for (let i = 0; i < this.count; i++) {
+						const _data = {
+							// 每个粒子的 x y 轴
+							x: 0,
+							y: 0,
+							// 每个粒子的 x y 轴的偏移量
+							vel: {
+								x: 0,
+								y: 0,
+							},
+							// 每个粒子的大小
+							size: this.size,
+							// 每个粒子的的透明度
+							opacity: 1,
+						};
+
+						// 打乱每个粒子的位置
+						let angle = Math.random() * Math.PI * 2;
+
+						let speed = Math.cos((Math.random() * Math.PI) / 2) * 15;
+
+						_data.x = this.clientX + Math.cos(angle) * speed;
+						_data.y = this.clientY + Math.sin(angle) * speed;
+
+						// 计算每个粒子的 x y 轴的偏移量
+						_data.vel.x = (this.clientX - _data.x) * 1.6;
+						_data.vel.y = (this.clientY - _data.y) * 1.6;
+
+						this.position.push(_data);
+					}
+
+					// 渲染
+					this.draw(this.position, 1);
+				}
+				// 更新每个粒子的状态
+				updated() {
+					// 当所有粒子透明度为0时删除当前实例
+					if (this.index > this.persistentFrame) {
+						if (this.position.length <= 0) fireworksList.shift();
+					}
+
+					// 计算每个粒子透明度的减少量
+					const t = this.position.map(() => Math.floor(Math.random() * 20 + 1) / 100);
+					// 记录要的删除的粒子
+					const removeList = [];
+
+					for (let i = 0; i < this.position.length; i++) {
+						// 计算每个粒子新的的 x y 轴的偏移量
+						this.position[i].vel.x *= this.diffusionVelocity;
+						this.position[i].vel.y *= this.diffusionVelocity;
+
+						// 给每个粒子添加重力偏移
+						this.position[i].vel.y += 0.6;
+
+						// 更新每个粒子的位置
+						this.position[i].x += this.position[i].vel.x;
+						this.position[i].y += this.position[i].vel.y;
+
+						// 添加粒子变小的效果
+						if (this.position[i].size > this.minSize) this.position[i].size -= 0.2;
+						if (this.position[i].size < this.minSize) this.position[i].size = this.minSize;
+
+						if (this.index > this.persistentFrame) {
+							// 减小透明度
+							if (!(Math.floor(Math.random() * 50) === 1)) this.position[i].opacity -= t[i];
+
+							if (this.position[i].opacity <= 0 && removeList.indexOf(i) === -1) removeList.push(i);
+						}
+					}
+
+					// 渲染
+					this.draw(this.position, 1);
+
+					// 删除透明度为0的粒子
+					for (let i = 0; i < removeList.length; i++) {
+						this.position.splice(removeList[i], 1);
+					}
+
+					this.index++;
+				}
+				// 渲染方法
+				draw(position, transparency) {
+					position.forEach((item) => {
+						// 开始路径
+						this.ctx.beginPath();
+
+						// 画圆
+						this.ctx.arc(item.x, item.y, item.size, Math.PI * 2, false);
+
+						// 结束路径
+						this.ctx.closePath();
+
+						// 设置填充的颜色
+						this.ctx.globalCompositeOperation = 'lighter'; // 设置填充颜色的模式
+						const gradient = this.ctx.createRadialGradient(item.x, item.y, 0.1, item.x, item.y, item.size); // 设置放射填充
+						gradient.addColorStop(0.1, `rgba(255,255,255, ${item.opacity})`); // 设置粒子内部白色效果
+						gradient.addColorStop(0.8, `hsla(${this.color}, 100%, 50%, ${item.opacity})`); // 设置主要颜色
+						gradient.addColorStop(1, `hsla(${this.color}, 100%, 50%, 0.1)`); // 设置光晕颜色
+						this.ctx.fillStyle = gradient;
+
+						// 填充
+						this.ctx.fill();
+					});
+				}
+			}
+
+			// 颜色稀释函数
+			function dilution(ctx, width, height, s = 0.2) {
+				const datas = ctx.getImageData(0, 0, width, height);
+				for (let i = 0; i < datas.data.length; i += 4) {
+					if (datas.data[i + 3] > 0) {
+						const a = datas.data[i + 3] * s;
+						datas.data[i + 3] -= a < 1 ? 0 : a;
+					}
+				}
+
+				ctx.putImageData(datas, 0, 0);
+			}
+
+			// 帧间隔执行函数函数
+			let vt = false;
+			function animation() {
+				if (fireworksList.length) {
+					dilution(ctx, canvas.width, canvas.height, fireworksTail / 100);
+					vt = true;
+				} else {
+					if (vt) {
+						vt = false;
+						ctx.clearRect(0, 0, canvas.width, canvas.height);
+					}
+				}
+				for (let fireworks of fireworksList) fireworks.updated();
+				// 帧间隔执行
+				requestAnimationFrame(animation);
+			}
+
+			animation();
+
+			document.addEventListener('click', (event) => {
+				const fireworks = new Fireworks(event.clientX, event.clientY, ctx);
+				fireworks.create();
+				fireworksList.push(fireworks);
+			});
+		</script>
+	</body>
+</html>

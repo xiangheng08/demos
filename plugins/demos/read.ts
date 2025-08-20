@@ -40,8 +40,13 @@ export const readDemoConfigs = (
       }
     }
 
+    const defaultDemoConfigFile: Partial<DemoConfigWithPlugin> = {
+      title: file,
+    }
+
     if (isFile(htmlPath)) {
       demoConfigs.push({
+        ...defaultDemoConfigFile,
         ...demoConfigFile!,
         id: file,
         type: 'html',
@@ -53,6 +58,7 @@ export const readDemoConfigs = (
       })
     } else if (isFile(componentPath)) {
       demoConfigs.push({
+        ...defaultDemoConfigFile,
         ...demoConfigFile!,
         id: file,
         type: 'component',

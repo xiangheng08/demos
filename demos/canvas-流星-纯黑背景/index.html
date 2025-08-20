@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			http-equiv="X-UA-Compatible"
+			content="IE=edge" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0" />
+		<style>
+			* {
+				padding: 0;
+				margin: 0;
+			}
+
+			body {
+				background-color: black;
+				width: 100vw;
+				height: 100vh;
+				overflow: hidden;
+			}
+		</style>
+		<title>流星-纯黑背景</title>
+	</head>
+
+	<body>
+		<canvas id="meteor"></canvas>
+
+		<script>
+			const canvas = document.getElementById('meteor');
+			const ctx = canvas.getContext('2d');
+
+			canvas.width = document.body.clientWidth;
+			canvas.height = document.body.clientHeight;
+
+			const meteorCount = 6; // 流星数量
+			const meteorTail = 92; // 流星拖尾长度
+			const meteorList = []; // 流星实例数组
+
+			// 流星类
+			class Meteor {
+				constructor(x, y, ctx, r, angle = 150, speed = 6) {
+					this.ctx = ctx;
+
+					// 流星初始位置
+					this.x = x;
+					this.y = y;
+
+					// 流星半径
+					this.r = r;
+
+					// 流星速度
+					this.speed = speed;
+
+					// 角度
+					this.angle = angle;
+
+					// 颜色
+					this.color = '255, 255, 255';
+
+					// 偏移量
+					this.vel = {
+						x: 0.5,
+						y: 0.5,
+					};
+
+					// 计算偏移量
+					const offset = 1 / 90;
+					if (angle <= 90) {
+						this.vel.x = 1 - offset * angle;
+						this.vel.y = offset * angle;
+					} else if (angle <= 180) {
+						this.vel.x = 1 - offset * angle;
+						this.vel.y = 1 - offset * (angle % 90);
+						this.vel.y %= 1;
+					} else if (angle <= 270) {
+						this.vel.x = -(1 - offset * (angle % 90));
+						this.vel.x %= 1;
+						this.vel.y = -(offset * (angle % 90));
+						if (angle === 270) this.vel.y = -1;
+					} else if (angle <= 360) {
+						this.vel.x = offset * (angle % 90);
+						if (angle === 360) this.vel.x = 1;
+						this.vel.y = -(1 - offset * (angle % 90));
+						this.vel.y %= 1;
+					}
+
+					// 计算速度
+					this.vel.x *= speed;
+					this.vel.y *= speed;
+				}
+				// 渲染函数
+				draw() {
+					this.ctx.fillStyle = `rgb(${this.color})`;
+					this.ctx.beginPath();
+					this.ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
+					this.ctx.closePath();
+					this.ctx.fill();
+				}
+				// 状态更新函数
+				updated() {
+					this.draw();
+
+					// 更新位置信息
+					this.x += this.vel.x;
+					this.y += this.vel.y;
+					// 超过画布范围更新流行位置
+					if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+						this.x = Math.random() * canvas.width;
+						this.y = Math.random() * canvas.height;
+					}
+				}
+			}
+
+			// 画流星
+			let i = 0;
+			let timer = setInterval(() => {
+				if (i < meteorCount) {
+					meteorList[i] = new Meteor(
+						Math.random() * canvas.width,
+						Math.random() * canvas.height,
+						ctx,
+						Math.floor(Math.random() * 2) + 1,
+						150,
+						6
+					);
+
+					i++;
+				} else {
+					clearInterval(timer);
+				}
+			}, 500);
+
+			// 帧间隔执行函数函数
+			function animation() {
+				// 填充黑色
+				ctx.fillStyle = `rgba(0, 0, 0, ${1 - meteorTail / 100})`;
+				ctx.fillRect(0, 0, canvas.width, canvas.height);
+				// 更新每个流星的状态
+				for (let meteor of meteorList) meteor.updated();
+				// 帧间隔执行
+				requestAnimationFrame(animation);
+			}
+
+			animation();
+		</script>
+	</body>
+</html>

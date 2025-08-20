@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>元素拖动</title>
+		<style>
+			body {
+				margin: 0;
+				overflow: hidden;
+			}
+
+			#draggable {
+				width: 100px;
+				height: 100px;
+				background-color: #3498db;
+				position: absolute;
+				cursor: grab;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="draggable"></div>
+
+		<script>
+			document.addEventListener('DOMContentLoaded', function () {
+				const draggableElement = document.getElementById('draggable');
+
+				let offsetX, offsetY;
+				let isDragging = false;
+
+				draggableElement.addEventListener('mousedown', (e) => {
+					isDragging = true;
+
+					// 记录鼠标点击位置与元素左上角的偏移
+					offsetX = e.clientX - draggableElement.getBoundingClientRect().left;
+					offsetY = e.clientY - draggableElement.getBoundingClientRect().top;
+
+					// 修改鼠标样式
+					draggableElement.style.cursor = 'grabbing';
+				});
+
+				document.addEventListener('mousemove', (e) => {
+					if (!isDragging) return;
+
+					// 计算新的元素位置
+					const x = e.clientX - offsetX;
+					const y = e.clientY - offsetY;
+
+					// 限制元素不超出视口范围
+					const maxX = window.innerWidth - draggableElement.offsetWidth;
+					const maxY = window.innerHeight - draggableElement.offsetHeight;
+
+					const constrainedX = Math.max(0, Math.min(x, maxX));
+					const constrainedY = Math.max(0, Math.min(y, maxY));
+
+					// 移动元素
+					draggableElement.style.left = `${constrainedX}px`;
+					draggableElement.style.top = `${constrainedY}px`;
+				});
+
+				document.addEventListener('mouseup', () => {
+					isDragging = false;
+					draggableElement.style.cursor = 'grab';
+				});
+			});
+		</script>
+	</body>
+</html>

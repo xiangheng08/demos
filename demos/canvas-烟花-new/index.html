@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="cn">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<style>
+			* {
+				padding: 0;
+				margin: 0;
+			}
+			html,
+			body {
+				width: 100vw;
+				height: 100vh;
+			}
+			body {
+				background-image: linear-gradient(-10deg, #032338 0%, #021521 90%);
+				/* background-color: black; */
+				/* background-image: url(http://121.41.59.220/img/nav1920x1080_ye.80b84f30.jpg); */
+				overflow: hidden;
+			}
+		</style>
+		<title>烟花-new</title>
+	</head>
+	<body>
+		<canvas id="fireworks">您的浏览器不支持</canvas>
+		<script>
+			const canvas = document.getElementById('fireworks');
+			const ctx = canvas.getContext('2d');
+
+			canvas.width = document.body.clientWidth;
+			canvas.height = document.body.clientHeight;
+
+			// 获取随机数
+			function getRandom(min, max) {
+				return Math.floor(Math.random() * (max - min + 1)) + min;
+			}
+
+			// 移除指定数组元素
+			function removeElment(arr, indexList) {
+				indexList.sort((a, b) => b - a);
+
+				for (let i of indexList) {
+					if (i >= 0 && i < arr.length) {
+						arr.splice(i, 1);
+					}
+				}
+			}
+
+			// 烟花类
+			class Fireworks {
+				constructor(ctx, x, y) {
+					this.ctx = ctx;
+					this.x = x;
+					this.y = y;
+
+					// 粒子颜色
+					this.color = getRandom(10, 360);
+
+					// 粒子初始大小
+					this.size = 10;
+
+					// 重力偏移量
+					this.gravity = 0.2;
+
+					// 粒子受到的速度阻力
+					this.resistance = 0.94;
+
+					// 每个粒子的大小缩小的比例
+					this.shrink = Math.random() * 0.02 + 0.97;
+
+					// 是否有闪烁效果
+					this.flick = true;
+
+					// 粒子数量
+					const count = getRandom(60, 80);
+
+					for (let i = 0; i < count; i++) {
+						this.particleList.push(this.createParticle());
+					}
+
+					this.draw();
+				}
+
+				// 粒子列表
+				particleList = [];
+
+				// 创建粒子对象方法
+				createParticle() {
+					const obj = {
+						// 粒子的初始
+						x: this.x,
+						y: this.y,
+						// 方向速度
+						vel: {
+							x: 0,
+							y: 0,
+						},
+						// 每个粒子的大小缩小的比例
+						shrink: this.shrink,
+						// 每个粒子的大小
+						size: this.size,
+						// 粒子受到的速度阻力
+						resistance: this.resistance,
+						// 粒子受到的重力加速度
+						gravity: this.gravity,
+						// 是否有闪烁效果
+						flick: this.flick,
+						// 粒子的透明度
+						alpha: 1,
+						// 粒子每帧透明度减少的值
+						fade: getRandom(0, 10) / 1000,
+						// 粒子的颜色代码
+						color: this.color,
+					};
+
+					// 打乱每个粒子的位置
+					const angle = Math.random() * Math.PI * 2;
+					const speed = Math.cos((Math.random() * Math.PI) / 2) * 15;
+
+					// 计算每个粒子方向速度
+					obj.vel.x = Math.cos(angle) * speed;
+					obj.vel.y = Math.sin(angle) * speed;
+
+					return obj;
+				}
+
+				// 画方法
+				draw() {
+					this.particleList.forEach((item) => {
+						this.ctx.save();
+
+						this.ctx.globalCompositeOperation = 'lighter';
+
+						const x = item.x,
+							y = item.y,
+							r = item.size / 2;
+
+						const gradient = this.ctx.createRadialGradient(x, y, 0.1, x, y, r);
+						gradient.addColorStop(0.1, 'rgba(255,255,255,' + item.alpha + ')');
+						gradient.addColorStop(0.8, 'hsla(' + item.color + ', 100%, 50%, ' + item.alpha + ')');
+						gradient.addColorStop(1, 'hsla(' + item.color + ', 100%, 50%, 0.1)');
+
+						this.ctx.fillStyle = gradient;
+
+						this.ctx.beginPath();
+						this.ctx.arc(
+							item.x,
+							item.y,
+							item.flick ? (Math.random() * item.size) / 2 + item.size / 2 : item.size,
+							0,
+							Math.PI * 2,
+							true
+						);
+						this.ctx.closePath();
+
+						this.ctx.fill();
+
+						this.ctx.restore();
+					});
+				}
+
+				// 更新每个粒子的状态
+				update() {
+					const removeList = [];
+
+					for (let i = 0; i < this.particleList.length; i++) {
+						// 更新方向速度
+						this.particleList[i].vel.x *= this.particleList[i].resistance;
+						this.particleList[i].vel.y *= this.particleList[i].resistance;
+
+						// 更新重力偏移
+						this.particleList[i].vel.y += this.particleList[i].gravity;
+
+						// 根据速度更新位置
+						this.particleList[i].x += this.particleList[i].vel.x;
+						this.particleList[i].y += this.particleList[i].vel.y;
+
+						// 逐渐缩小粒子的大小
+						this.particleList[i].size *= this.particleList[i].shrink;
+
+						// 逐渐降低透明度
+						this.particleList[i].alpha -= this.particleList[i].fade;
+
+						const s1 = this.particleList[i].y > canvas.height;
+						const s2 = this.particleList[i].alpha <= 0 || this.particleList[i].size <= 0.01;
+
+						if (s1 || s2) {
+							removeList.push(i);
+						}
+					}
+
+					// 移除大小为小于等于0粒子
+					removeElment(this.particleList, removeList);
+
+					this.draw();
+				}
+			}
+
+			// 火箭类
+			class Rocket {
+				constructor(ctx, x, y) {
+					this.ctx = ctx;
+					this.x = x;
+					this.y = y;
+
+					this.pos = {
+						x: canvas.width / 2,
+						y: canvas.height,
+					};
+
+					this.size = 4;
+
+					// 速度
+					const speed = 4;
+
+					const deltaX = x - this.pos.x;
+					const deltaY = y - this.pos.y;
+
+					// 两点之间的直线距离
+					const distance = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+
+					const time = distance / speed;
+
+					this.vel = {
+						x: deltaX / time,
+						y: deltaY / time,
+					};
+
+					this.over = false;
+
+					this.draw();
+				}
+
+				draw() {
+					this.ctx.save();
+
+					this.ctx.beginPath();
+					this.ctx.arc(this.pos.x, this.pos.y, this.size, 0, Math.PI * 2);
+					this.ctx.closePath();
+
+					this.ctx.fillStyle = '#ffffff';
+
+					this.ctx.fill();
+
+					this.ctx.restore();
+				}
+
+				update() {
+					this.pos.x += this.vel.x;
+					this.pos.y += this.vel.y;
+
+					if (this.pos.y <= this.y) {
+						this.end();
+						this.over = true;
+						return;
+					}
+
+					this.draw();
+				}
+
+				end() {
+					fireworksList.push(new Fireworks(ctx, this.x, this.y));
+				}
+			}
+
+			const fireworksList = []; // 烟花实例列表
+			const rocketList = []; // 火箭示例列表
+
+			function tick() {
+				ctx.globalCompositeOperation = 'destination-out';
+				ctx.fillStyle = 'rgba(0, 0, 0,' + 10 / 100 + ')';
+				ctx.fillRect(0, 0, canvas.width, canvas.height);
+				ctx.globalCompositeOperation = 'lighter';
+
+				const removeList1 = [];
+				const removeList2 = [];
+
+				for (let i = 0; i < fireworksList.length; i++) {
+					fireworksList[i].update();
+
+					if (fireworksList[i].particleList.length === 0) removeList1.push(i);
+				}
+
+				for (let i = 0; i < rocketList.length; i++) {
+					rocketList[i].update();
+
+					if (rocketList[i].over) {
+						removeList2.push(i);
+					}
+				}
+
+				removeElment(fireworksList, removeList1);
+				removeElment(rocketList, removeList2);
+
+				requestAnimationFrame(tick);
+			}
+
+			tick();
+
+			document.addEventListener('click', (event) => {
+				console.log(event.clientX, event.clientY);
+				rocketList.push(new Rocket(ctx, event.clientX, event.clientY));
+			});
+
+			let timer;
+			window.addEventListener('resize', () => {
+				clearTimeout(timer);
+
+				timer = setTimeout(() => {
+					canvas.width = document.body.clientWidth;
+					canvas.height = document.body.clientHeight;
+				}, 300);
+			});
+		</script>
+	</body>
+</html>

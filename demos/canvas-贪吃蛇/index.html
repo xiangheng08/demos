@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>贪吃蛇</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+			}
+			html,
+			body {
+				height: 100%;
+			}
+			body {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				background-color: #1e1e1e;
+			}
+			.box {
+				width: 600px;
+				height: 500px;
+				border: 1px solid #e74c3c;
+				background-color: #2d2d2d;
+				position: relative;
+			}
+			.box .tip {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				color: #ecf0f1;
+				font-size: 20px;
+				white-space: nowrap;
+			}
+			.box.eatBean {
+				animation: eatBean 0.6s linear;
+			}
+			@keyframes tip {
+				0% {
+					opacity: 1;
+				}
+				50% {
+					opacity: 0.01;
+				}
+				100% {
+					opacity: 1;
+				}
+			}
+			@keyframes eatBean {
+				0% {
+					border: 1px solid #e74c3c;
+				}
+				50% {
+					border: 1px solid #00a8ff;
+				}
+				100% {
+					border: 1px solid #e74c3c;
+				}
+			}
+			.box .fraction {
+				position: absolute;
+				top: calc(100% + 10px);
+				left: 0;
+				color: #ecf0f1;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="box">
+			<canvas id="retroSnaker"></canvas>
+			<span class="tip"></span>
+			<span class="fraction"></span>
+		</div>
+		<script>
+			// 获取元素
+			const boxDom = document.querySelector('.box');
+			const tipDom = document.querySelector('.tip');
+			const fractionDom = document.querySelector('.fraction');
+			const canvas = document.getElementById('retroSnaker');
+			// 获取上下文对象
+			const ctx = canvas.getContext('2d');
+
+			// 设置宽高
+			canvas.width = 600;
+			canvas.height = 500;
+
+			const gridSize = 10; // 格子的像素大小
+			const beans = []; // 存在豆子实例的组数
+			let status = 'wait'; // inGame / pause / wait / failure 状态
+			let snake; // 蛇的示例
+			let fraction = 0; // 分数
+
+			// 蛇类
+			class Snake {
+				constructor(ctx, x, y, size, length, color, color2) {
+					this.ctx = ctx;
+					this.x = x;
+					this.y = y;
+					this.size = size;
+					this.length = length;
+					this.color = color;
+					this.color2 = color2;
+					this.position = [];
+					this.direction = 'bottom';
+
+					this.init();
+				}
+				init() {
+					let tmp = this.x;
+
+					for (let i = 0; i < this.length; i++) {
+						this.ctx.fillStyle = this.color;
+
+						this.position[i] = {
+							x: tmp-- * this.size,
+							y: this.y * this.size,
+						};
+					}
+
+					return this;
+				}
+				// 渲染
+				render() {
+					for (let i = 0; i < this.position.length; i++) {
+						if (i === 0) {
+							this.ctx.fillStyle = this.color2;
+						} else {
+							this.ctx.fillStyle = this.color;
+						}
+
+						this.ctx.fillRect(this.position[i].x, this.position[i].y, this.size, this.size);
+					}
+				}
+				// 移动
+				move() {
+					let { x, y } = this.position[0];
+
+					switch (this.direction) {
+						case 'right':
+							this.position[0].x += this.size;
+							break;
+						case 'left':
+							this.position[0].x -= this.size;
+							break;
+						case 'top':
+							this.position[0].y -= this.size;
+							break;
+						case 'bottom':
+							this.position[0].y += this.size;
+							break;
+					}
+
+					for (let i = 1; i < this.position.length; i++) {
+						let { x: x1, y: y1 } = this.position[i];
+
+						this.position[i].x = x;
+						this.position[i].y = y;
+
+						x = x1;
+						y = y1;
+					}
+				}
+				// 设置方向
+				setDirection(direction) {
+					// 防止方向相反
+					const s1 = this.direction === 'top' && direction === 'bottom';
+					const s2 = this.direction === 'bottom' && direction === 'top';
+					const s3 = this.direction === 'left' && direction === 'right';
+					const s4 = this.direction === 'right' && direction === 'left';
+
+					if (s1 || s2 || s3 || s4) return;
+
+					this.direction = direction;
+				}
+				// 检查
+				check() {
+					if (this.checkBoundary()) return false;
+					if (this.checkBody()) return false;
+
+					return true;
+				}
+				// 检查是否超出边界
+				checkBoundary() {
+					if (
+						this.position[0].x < 0 ||
+						this.position[0].x + this.size >= this.ctx.canvas.width ||
+						this.position[0].y < 0 ||
+						this.position[0].y + this.size >= this.ctx.canvas.height
+					) {
+						return true;
+					}
+					return false;
+				}
+				// 检查是否触碰到身体
+				checkBody() {
+					for (let i = 1; i < this.position.length; i++) {
+						if (this.position[0].x === this.position[i].x && this.position[0].y === this.position[i].y) {
+							return true;
+						}
+					}
+					return false;
+				}
+			}
+
+			// 豆子类
+			class Bean {
+				constructor(ctx, x, y, size, color) {
+					this.ctx = ctx;
+					this.x = x;
+					this.y = y;
+					this.size = size;
+					this.color = color;
+				}
+				// 渲染
+				render() {
+					this.ctx.fillStyle = this.color;
+					this.ctx.fillRect(this.x * this.size, this.y * this.size, this.size, this.size);
+
+					return this;
+				}
+			}
+
+			// 游戏等待
+			function wait() {
+				tipDom.innerText = '点击任意键开始游戏';
+				tipDom.style.animation = 'tip 2s infinite';
+				status = 'wait';
+			}
+
+			// 游戏开始
+			function start() {
+				tipDom.style.removeProperty('animation');
+				tipDom.style.display = 'none';
+				status = 'inGame';
+
+				snake = new Snake(ctx, 10, 10, gridSize, 30, '#27ae60', '#55efc4').init();
+				snake.render();
+
+				fraction = 0;
+
+				run();
+
+				generateRandomBeans();
+			}
+
+			// 游戏暂停
+			function pause() {
+				if (status === 'pause') {
+					tipDom.style.removeProperty('animation');
+					tipDom.style.display = 'none';
+					status = 'inGame';
+				} else {
+					tipDom.style.removeProperty('animation');
+					tipDom.style.removeProperty('display');
+					tipDom.innerText = '游戏暂停';
+					status = 'pause';
+				}
+			}
+
+			// 游戏结束
+			function failure() {
+				tipDom.style.removeProperty('animation');
+				tipDom.style.removeProperty('display');
+				tipDom.innerText = '游戏结束';
+				status = 'failure';
+
+				beans.splice(0, beans.length);
+			}
+
+			// 随机数方法
+			function getRandom(min, max) {
+				return Math.floor(Math.random() * (max - min + 1) + min);
+			}
+
+			// 生成随机的豆子
+			function generateRandomBeans() {
+				const len = getRandom(1, 10);
+				for (var i = 0; i < len; i++) {
+					let x, y;
+					do {
+						x = getRandom(0, canvas.width / gridSize);
+						y = getRandom(0, canvas.height / gridSize);
+					} while (beans.some((bean) => bean.x === x && bean.y === y));
+
+					beans.push(new Bean(ctx, x, y, gridSize, '#74b9ff').render());
+				}
+				return beans;
+			}
+
+			// 吃到豆子的动画效果
+			function eatBean() {
+				boxDom.classList.remove('eatBean');
+
+				setTimeout(() => boxDom.classList.add('eatBean'));
+			}
+
+			// 更新分数
+			function updateFraction() {
+				fractionDom.innerText = `分数：${fraction}`;
+			}
+
+			// 检查豆子是否被吃掉
+			function checkBeanEat() {
+				const { x, y } = snake.position[snake.position.length - 1];
+
+				for (let i = 0; i < beans.length; i++) {
+					if (
+						snake.position[0].x / gridSize === beans[i].x &&
+						snake.position[0].y / gridSize === beans[i].y
+					) {
+						beans.splice(i, 1);
+						snake.position.push({ x, y });
+						eatBean();
+						fraction++;
+						break;
+					}
+				}
+
+				if (beans.length === 0) {
+					generateRandomBeans();
+				}
+			}
+
+			function run() {
+				setTimeout(() => {
+					if (status === 'inGame') {
+						ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+						beans.forEach((item) => item.render());
+
+						snake.move();
+
+						checkBeanEat();
+
+						if (!snake.check()) {
+							failure();
+						}
+
+						snake.render();
+
+						updateFraction();
+					}
+
+					if (status === 'inGame' || status === 'pause') {
+						run();
+					}
+				}, 200);
+			}
+
+			window.addEventListener('keydown', (e) => {
+				if (status === 'inGame') {
+					if (e.key === ' ') return pause();
+
+					switch (e.key) {
+						case 'w':
+						case 'ArrowUp':
+							snake.setDirection('top');
+							break;
+						case 's':
+						case 'ArrowDown':
+							snake.setDirection('bottom');
+							break;
+						case 'a':
+						case 'ArrowLeft':
+							snake.setDirection('left');
+							break;
+						case 'd':
+						case 'ArrowRight':
+							snake.setDirection('right');
+							break;
+					}
+				} else if (status === 'wait') {
+					start();
+				} else if (status === 'pause' && e.key === ' ') {
+					pause();
+				} else if (status === 'failure') {
+					wait();
+				}
+
+				e.preventDefault();
+			});
+
+			wait();
+		</script>
+	</body>
+</html>

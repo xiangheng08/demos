@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>滚动吸附</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+			}
+			.container {
+				width: 800px;
+				height: 500px;
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				box-shadow: 2px 2px 8px 2px #bdc3c7;
+				overflow-y: scroll;
+				scroll-snap-type: y mandatory;
+			}
+			.item {
+				height: 500px;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				font-size: 30px;
+				color: #fff;
+				scroll-snap-align: center;
+				scroll-snap-stop: always;
+			}
+			.item:nth-child(odd) {
+				background-color: #f39c12;
+			}
+			.item:nth-child(even) {
+				background-color: #f1c40f;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div class="item">1</div>
+			<div class="item">2</div>
+			<div class="item">3</div>
+			<div class="item">4</div>
+			<div class="item">5</div>
+		</div>
+	</body>
+</html>

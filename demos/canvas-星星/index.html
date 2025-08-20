@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+
+<html lang="cn">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			http-equiv="X-UA-Compatible"
+			content="IE=edge" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0" />
+		<style>
+			* {
+				padding: 0;
+				margin: 0;
+			}
+
+			body {
+				background-image: linear-gradient(-10deg, #032338 0%, #021521 90%);
+				width: 100vw;
+				height: 100vh;
+				overflow: hidden;
+			}
+		</style>
+		<title>星空</title>
+	</head>
+
+	<body>
+		<canvas id="star"></canvas>
+
+		<script>
+			const canvas = document.getElementById('star');
+			const ctx = canvas.getContext('2d');
+
+			canvas.width = document.body.clientWidth;
+			canvas.height = document.body.clientHeight;
+
+			const starList = []; // 星星实例数组
+			const starCount = 500; //星星数量
+
+			// 星星类
+			class Star {
+				constructor(x, y, ctx, r) {
+					this.ctx = ctx;
+					// 星星起始位置
+					this.x = x;
+					this.y = y;
+					this.r = Math.floor(Math.random() * 200) === 1 ? r + 1.5 : r; // 星星半径
+					this.Transparency = 0.8; // 星星透明度
+					this.s = Math.random() > 0.5; // 是否执行闪烁效果
+					this.j = true; // 判断透明度递增还是递减
+					this.color = '255, 255, 255'; // 颜色
+				}
+				// 渲染函数
+				draw() {
+					// 设置颜色
+					this.ctx.fillStyle = `rgba(${this.color},${this.Transparency})`;
+					// 开始路径
+					this.ctx.beginPath();
+					// 画圆
+					this.ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
+					// 结束路径
+					this.ctx.closePath();
+					// 填充
+					this.ctx.fill();
+				}
+				// 状态更新函数
+				updated() {
+					if (this.s) {
+						if (this.Transparency > 1) {
+							this.j = false;
+							this.s = false;
+						} else if (this.Transparency < 0) {
+							this.j = true;
+						}
+
+						if (this.j) {
+							this.Transparency += 0.02;
+						} else {
+							this.Transparency -= 0.02;
+						}
+					} else {
+						// 1/100 的几率执行闪烁效果
+						if (Math.floor(Math.random() * 100) === 50) this.s = true;
+					}
+
+					this.x += 0.04; // 左移
+					// 大于画布宽度 x 轴归零
+					if (this.x > canvas.width) {
+						this.x = 0;
+					}
+
+					this.draw();
+				}
+			}
+
+			// 画星星
+			for (let i = 0; i < starCount; i++) {
+				starList[i] = new Star(
+					Math.random() * canvas.width,
+					Math.random() * canvas.height,
+					ctx,
+					Math.random() * 1.2
+				);
+				starList[i].draw();
+			}
+
+			// 帧间隔执行函数函数
+			function animation() {
+				// 清除画布的内容
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				// 更新每个星星的状态
+				for (let star of starList) star.updated();
+				// 帧间隔执行
+				requestAnimationFrame(animation);
+			}
+
+			animation();
+		</script>
+	</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>奥运五环</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+			}
+			body {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				height: 100vh;
+			}
+			.olympic-rings {
+				position: relative;
+				width: 120px;
+				height: 120px;
+				transform-style: preserve-3d;
+				transition: 0.3s;
+			}
+			.ring {
+				width: 100px;
+				height: 100px;
+				border-width: 10px;
+				border-radius: 50%;
+				border-style: solid;
+				position: absolute;
+			}
+			.ring:nth-child(1) {
+				border-color: #3277b8;
+				top: -60px;
+				left: -130px;
+				transform: rotateY(-2deg) translateZ(1px);
+			}
+			.ring:nth-child(2) {
+				border-color: #020102;
+				top: -60px;
+				left: 0;
+			}
+			.ring:nth-child(3) {
+				border-color: #dc322b;
+				top: -60px;
+				left: 130px;
+				transform: rotateY(-2deg) translateZ(1px);
+			}
+			.ring:nth-child(4) {
+				border-color: #f9ce45;
+				top: 0;
+				left: -65px;
+				transform: rotateY(2deg) translateZ(1px);
+			}
+			.ring:nth-child(5) {
+				border-color: #4ca24e;
+				top: 0;
+				left: 65px;
+				transform: rotateY(2deg) translateZ(-1px);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="olympic-rings">
+			<div class="ring"></div>
+			<div class="ring"></div>
+			<div class="ring"></div>
+			<div class="ring"></div>
+			<div class="ring"></div>
+		</div>
+	</body>
+</html>
