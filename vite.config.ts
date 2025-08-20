@@ -8,6 +8,7 @@ import { demos, demosBuild } from './plugins/demos'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue(), vueDevTools(), demos(), demosBuild()],
+  base: './',
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
