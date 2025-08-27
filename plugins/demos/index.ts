@@ -93,9 +93,10 @@ export const demos = (): PluginOption => {
       _server = server
 
       server.middlewares.use((req, res, next) => {
-        // console.log('URL:', req.url)
+        // console.log('URL:', req.url, req.url?.startsWith('/demos'))
         if (req.method !== 'GET' || !req.url?.startsWith('/demos')) return next()
-        const filePath = join(_resolvedConfig.root, req.url)
+        const filePath = join(_resolvedConfig.root, decodeURIComponent(req.url))
+        // console.log('filePath:', filePath)
         if (
           demoConfigs.some((config) => config.type === 'html' && isSubPath(config.dir, filePath))
         ) {
