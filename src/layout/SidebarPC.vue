@@ -3,6 +3,7 @@ import { useApp } from '@/hooks/stores'
 import MenuItem from './MenuItem.vue'
 import SearchButton from './SearchButton.vue'
 import GithubIcon from '@/components/icons/GithubIcon.vue'
+import LinkIcon from '@/components/icons/LinkIcon.vue'
 import { computed, ref, watch } from 'vue'
 
 const { demoConfigs, currentDemoConfig } = useApp()
@@ -85,6 +86,15 @@ watch(keyword, (val) => {
     <a href="https://github.com/xiangheng08/demos.git" target="_blank" class="repository">
       <GithubIcon />
     </a>
+    <a
+      v-if="currentDemoConfig && currentDemoConfig.type === 'html'"
+      :href="currentDemoConfig.html"
+      target="_blank"
+      class="html-demo"
+      title="在新标签页打开此 demo"
+    >
+      <LinkIcon />
+    </a>
   </div>
 </template>
 
@@ -107,7 +117,12 @@ watch(keyword, (val) => {
   display: flex;
   align-items: center;
   padding: 0 12px;
+  gap: 16px;
   .repository {
+    font-size: 24px;
+    color: var(--c-solid);
+  }
+  .html-demo {
     font-size: 24px;
     color: var(--c-solid);
   }

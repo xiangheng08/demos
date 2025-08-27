@@ -9,6 +9,9 @@ import { demos, demosBuild } from './plugins/demos'
 export default defineConfig({
   plugins: [vue(), vueDevTools(), demos(), demosBuild()],
   base: './',
+  server: {
+    port: 9673,
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
