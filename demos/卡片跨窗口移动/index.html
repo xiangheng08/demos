@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡片跨窗口移动</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .card {
+            width: 238px;
+            height: 333px;
+            background-color: #f3a694;
+            border-radius: 6px;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card"></div>
+
+    <script>
+        const card = document.querySelector('.card');
+
+        // 居中
+        card.style.left = innerWidth / 2 - card.offsetWidth / 2 + 'px';
+        card.style.top = innerHeight / 2 - card.offsetHeight / 2 + 'px';
+
+        // 拖拽部分
+        let isDragging = false;
+        let offsetX, offsetY;
+
+        card.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            offsetX = e.clientX - card.getBoundingClientRect().left;
+            offsetY = e.clientY - card.getBoundingClientRect().top;
+            card.style.cursor = 'grabbing';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const x = e.clientX - offsetX;
+            const y = e.clientY - offsetY;
+            card.style.left = x + 'px';
+            card.style.top = y + 'px';
+            // 发送坐标
+            const position = clientToScreen(x, y);
+            channel.postMessage(position);
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+            card.style.cursor = 'grab';
+        });
+
+        card.style.cursor = 'grab';
+
+        // 坐标系转换
+        function getBarHeight() {
+            return window.outerHeight - window.innerHeight;
+        }
+
+        function clientToScreen(clientX, clientY) {
+            return [clientX + window.screenX, clientY + window.screenY + getBarHeight()];
+        }
+
+        function screenToClient(screenX, screenY) {
+            return [screenX - window.screenX, screenY - window.screenY - getBarHeight()];
+        }
+
+        // 窗口通信
+        const channel = new BroadcastChannel('demos_card');
+
+        channel.addEventListener('message', (e) => {
+            const [clientX, clientY] = screenToClient(...e.data);
+            card.style.left = clientX + 'px';
+            card.style.top = clientY + 'px';
+        });
+    </script>
+</body>
+
+</html>
