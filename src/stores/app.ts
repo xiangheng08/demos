@@ -8,7 +8,7 @@ export const useAppStore = defineStore('App', () => {
   const windowWidth = ref(window.innerWidth)
   const isMobile = computed(() => windowWidth.value < 768)
   const demoConfigs = reactive(configs)
-  const currentDemoConfig = ref<DemoConfig | null>(null)
+  const currentDemoConfig = ref<DemoConfig | null>(demoConfigs[0])
 
   window.addEventListener('resize', () => {
     windowWidth.value = window.innerWidth
