@@ -22,11 +22,12 @@
 
         .bubbles {
             width: 100%;
-            height: 1px;
+            height: 1rem;
             position: absolute;
-            bottom: 0;
+            top: 0;
             left: 0;
             filter: url(#goo);
+            background: inherit;
         }
 
         .bubble {
@@ -45,11 +46,11 @@
             }
 
             75% {
-                transform: translateY(-56.25vh) scale(1);
+                transform: translateY(-22.5vh) scale(0.5);
             }
 
             100% {
-                transform: translateY(-75vh) scale(0);
+                transform: translateY(-30vh) scale(0);
             }
         }
     </style>
@@ -58,7 +59,7 @@
 <body>
     <footer>
         <div class="bubbles"></div>
-        <svg>
+        <svg style="display: none;">
             <defs>
                 <!-- 定义滤镜 -->
                 <filter id="goo">
@@ -79,19 +80,21 @@
         const createBubble = () => {
             const bubble = document.createElement('div');
             bubble.classList.add('bubble');
-            bubble.style.setProperty('--size', `${Math.random() * 200 + 100}px`);
-            bubble.style.setProperty('--x', `${Math.random() * 100}%`);
-            bubble.style.setProperty('--duration', `${Math.random() * 3 + 2}s`);
+            const size = Math.floor(Math.random() * 150) + 50;
+            const { width } = bubblesContainer.getBoundingClientRect();
+            bubble.style.setProperty('--size', `${size}px`);
+            bubble.style.setProperty('--x', `${Math.round(Math.random() * (width - size))}px`);
+            bubble.style.setProperty('--duration', `${Math.floor(Math.random() * 3000) + 2000}ms`);
             bubblesContainer.appendChild(bubble);
             bubble.addEventListener('animationend', () => {
                 bubblesContainer.removeChild(bubble);
-                // 继续生成新的泡泡
+                // 继续生成新的泡泡，保持数量
                 createBubble();
             });
         };
 
         // 初始生成一些泡泡
-        for (let i = 0; i < 30; i++) {
+        for (let i = 0; i < 20; i++) {
             createBubble();
         }
     </script>
