@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Share API Test</title>
+</head>
+
+<body>
+    <input type="file" id="fileInput">
+    <button onclick="shareFile()">分享文件</button>
+    <button onclick="shareText()">分享文本</button>
+    <button onclick="shareLink()">分享链接</button>
+    <script>
+        const fileInput = document.querySelector('#fileInput');
+
+        // 分享文件（需要用户手势触发）
+        async function shareFile() {
+            if (!navigator.canShare || !navigator.share) {
+                alert('浏览器不支持文件分享');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            console.log(file);
+
+            if (!file) {
+                alert('请先选择一个文件');
+                return;
+            }
+
+            // 检查文件是否可以被分享
+            if (!navigator.canShare({ files: [file] })) {
+                alert('该文件类型不支持分享');
+                return;
+            }
+
+            try {
+                await navigator.share({
+                    title: '分享文件',
+                    text: '这是一个通过 Web Share API 分享的文件',
+                    files: [file]
+                });
+                console.log('文件分享成功');
+            } catch (error) {
+                alert('文件分享失败', error);
+            }
+        }
+
+        // 分享文本
+        async function shareText() {
+            if (!navigator.share) {
+                alert('浏览器不支持文本分享');
+                return;
+            }
+
+            try {
+                await navigator.share({
+                    title: '分享文本',
+                    text: '这是一个通过 Web Share API 分享的文本内容'
+                });
+                console.log('文本分享成功');
+            } catch (error) {
+                alert('文本分享失败', error);
+            }
+        }
+
+        // 分享链接
+        async function shareLink() {
+            if (!navigator.share) {
+                alert('浏览器不支持链接分享');
+                return;
+            }
+
+            try {
+                await navigator.share({
+                    title: '分享链接',
+                    text: '这是一个通过 Web Share API 分享的链接',
+                    url: 'https://baidu.com'
+                });
+                console.log('链接分享成功');
+            } catch (error) {
+                alert('链接分享失败', error);
+            }
+        }
+    </script>
+</body>
+
+</html>
